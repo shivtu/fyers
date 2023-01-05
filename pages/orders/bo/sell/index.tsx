@@ -3,17 +3,23 @@ import Grid from '@mui/material/Grid/Grid';
 import Stack from '@mui/material/Stack/Stack';
 import TextField from '@mui/material/TextField/TextField';
 import { useState } from 'react';
-import { getFyersBOSellOrderParams } from '../../utils/orders.helper';
-import { fyersBracketSellOrder } from '../../services/http.services';
-import { IFyersBracketOrderParams } from '../../types/types';
-import { getRoundNumber } from '../../utils/utils';
+import { getFyersBOSellParams } from '../../../../utils/orders.helper';
+import { fyersBracketSellOrder } from '../../../../services/http.services';
+import { IFyersBracketOrderParams, INSESymbol } from '../../../../types/types';
+import { getRoundNumber } from '../../../../utils/utils';
 import Typography from '@mui/material/Typography/Typography';
-import VerticalDivider from '../../components/dividers/VerticalDivider';
+import VerticalDivider from '../../../../components/dividers/VerticalDivider';
 import FormControlLabel from '@mui/material/FormControlLabel/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox/Checkbox';
+import InputAdornment from '@mui/material/InputAdornment/InputAdornment';
+import { getTheme } from '../../../../utils/theme';
+import { Alert, AlertTitle } from '@mui/material';
+import TrendingDown from '@mui/icons-material/TrendingDown';
+import { Autocomplete } from '@mui/lab';
+import { NSESymbols } from '../../../../utils/NSESymbols';
 
-const Orders = () => {
-  const [symbol, setSymbol] = useState('NSE:CANBK-EQ');
+const FyersBracketOrderSell = () => {
+  const [symbol, setSymbol] = useState<INSESymbol>();
   const [tradingCandle, setTradingCandle] = useState({
     high: 0,
     low: 0,
@@ -34,7 +40,7 @@ const Orders = () => {
       alert('High risk');
       return;
     }
-    const fyersBoSellParams = getFyersBOSellOrderParams(
+    const fyersBoSellParams = getFyersBOSellParams(
       tradingCandle.high,
       tradingCandle.low,
       variationLimit
@@ -47,7 +53,7 @@ const Orders = () => {
       productType: 'BO',
       /** -1 for sell side and 1 for buy side */
       side: -1,
-      symbol,
+      symbol: symbol?.symbol || '',
       qty: sellQty(),
       disclosedQty: 0,
       type: 4,
@@ -70,31 +76,49 @@ const Orders = () => {
       if (result.data.id) {
         setOpenTrades([...openTrades, result.data.id]);
       }
+      if (result.data.s === 'error') console.log('error aa gaya!');
     } catch (error: any) {
       alert(error.message || 'Could not place order');
     }
   };
 
-  const sellQty: () => number = () => {
+  const sellQty = () => {
     const SLPrice = fyersBOParams.limitPrice + fyersBOParams.stopLoss;
 
     return getRoundNumber(
       riskPerTrade / (SLPrice - fyersBOParams.limitPrice)
-    ); /** Risk amount / (SL - entry)  */
+    ).toFixed(); /** Risk amount / (SL - entry)  */
   };
 
   const getTrailingSL = () =>
-    fyersBOParams.limitPrice + (fyersBOParams.limitPrice / 100) * 0.01;
+    fyersBOParams.limitPrice +
+    (fyersBOParams.limitPrice / 100) * variationLimit;
 
   return (
     <Stack spacing={2}>
-      <Typography variant='h6'>Fyers Bracket Sell Orders</Typography>
+      <Alert severity='error' icon={<TrendingDown />}>
+        <AlertTitle>Fyers Sell Order</AlertTitle>
+        <strong>Bracket Order - Sell</strong>
+      </Alert>
       <Grid
         container
         direction='row'
         justifyContent='center'
         alignItems='center'
       >
+        <TextField
+          label='Risk to reward ratio'
+          id='rsik-to-reward-ratio'
+          sx={{ m: 1, width: '15ch' }}
+          type='number'
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position='start'>1 : </InputAdornment>
+            ),
+          }}
+          size='small'
+          variant='outlined'
+        />
         <TextField
           size='small'
           label='Avoid trade if candle greater than'
@@ -119,28 +143,34 @@ const Orders = () => {
       <Grid
         container
         direction='row'
-        justifyContent='center'
+        justifyContent='space-between'
         alignItems='center'
       >
         <Stack spacing={2}>
-          <TextField
+          {/* <TextField
             size='small'
-            label='Symbol'
-            onChange={(e) => setSymbol(e.currentTarget.value.toUpperCase())}
+            label='Quantity'
+            type='number'
+            value={sellQty()}
+            disabled
+            helperText='Calculated on risk per trade'
+          /> */}
+          <Autocomplete
+            size='small'
+            options={NSESymbols || []}
+            renderInput={(params) => (
+              <TextField {...params} label='NSE Symbols' />
+            )}
+            getOptionLabel={(option) => option.name}
+            onChange={(event: any, newValue: any) => {
+              setSymbol(newValue);
+            }}
           />
           <TextField
             size='small'
             label='Variation limit'
             type='number'
             onChange={(e) => setVariationLimit(Number(e.target.value))}
-          />
-          <TextField
-            size='small'
-            label='Quantity'
-            type='number'
-            value={sellQty()}
-            disabled
-            // onChange={(e) => setQty(Number(e.currentTarget.value))}
           />
           <TextField
             size='small'
@@ -165,59 +195,74 @@ const Orders = () => {
             }
           />
           <Button
+            color={getTheme('sell')}
             size='small'
             onClick={handleBracketSellOrder}
             variant='contained'
+            disabled={
+              !Boolean(tradingCandle.high && tradingCandle.low && symbol)
+            }
           >
-            Place Bracket Sell Order
+            {`short ${symbol?.name}`}
           </Button>
         </Stack>
 
         <VerticalDivider margin='8px' />
 
-        <Stack spacing={2}>
-          <Typography variant='subtitle1'>Open trade details</Typography>
-          <Typography>Entry : {fyersBOParams?.limitPrice}</Typography>
-          <Typography>
-            SL :
-            {getRoundNumber(
-              fyersBOParams.limitPrice +
-                fyersBOParams.stopLoss +
-                variationLimit * 2
-            )}
-          </Typography>
-          <Typography>
-            Trailing SL :{getRoundNumber(getTrailingSL())}
-          </Typography>
-          <Typography>
-            Sell Quantity : {isFinite(sellQty()) ? sellQty() : 0}
-          </Typography>
-          <Typography>
-            Target:{' '}
-            {getRoundNumber(
-              fyersBOParams.limitPrice - fyersBOParams.takeProfit
-            )}
-          </Typography>
-        </Stack>
+        {fyersBOParams.limitPrice ? (
+          <Stack spacing={2}>
+            <Typography variant='subtitle1'>Orders Placed</Typography>
+            <Typography>Entry : {fyersBOParams?.limitPrice}</Typography>
+            <Typography>
+              SL :
+              {getRoundNumber(
+                fyersBOParams.limitPrice +
+                  fyersBOParams.stopLoss +
+                  variationLimit * 2
+              )}
+            </Typography>
+            <Typography>
+              Cost to cost SL (including brokerage) :
+              {getRoundNumber(getTrailingSL())}
+            </Typography>
+            <Typography>Sell Quantity : {sellQty()}</Typography>
+            <Typography>
+              Target:
+              {getRoundNumber(
+                fyersBOParams.limitPrice - fyersBOParams.takeProfit
+              )}
+            </Typography>
+            <Button size='small' variant='contained'>
+              Cancel trade
+            </Button>
+          </Stack>
+        ) : (
+          <div>
+            <Typography variant='subtitle1'>Orders Placed</Typography>
+            <Typography variant='caption'>No orders placed yet</Typography>
+          </div>
+        )}
 
         <VerticalDivider margin='8px' />
 
         <Stack spacing={2}>
           <Typography>Modify current open trades</Typography>
-          {openTrades?.map((ot) => (
-            <div key={ot}>
-              <span>
-                {`Fyers Order-ID: ${ot}`}
-                <Button variant='contained' size='small'>
-                  Canel order
-                </Button>
-                <Button variant='contained' size='small'>
-                  Trail SL to break even
-                </Button>
-              </span>
-            </div>
-          ))}
-          {!openTrades.length && (
+
+          {openTrades.length ? (
+            openTrades.map((ot) => (
+              <div key={ot}>
+                <span>
+                  {`Fyers Order-ID: ${ot}`}
+                  <Button variant='contained' size='small'>
+                    Canel order
+                  </Button>
+                  <Button variant='contained' size='small'>
+                    Trail SL to break even
+                  </Button>
+                </span>
+              </div>
+            ))
+          ) : (
             <Typography variant='caption'>No open trades yet</Typography>
           )}
         </Stack>
@@ -226,4 +271,4 @@ const Orders = () => {
   );
 };
 
-export default Orders;
+export default FyersBracketOrderSell;

@@ -6,7 +6,7 @@ export const initialBoSellOrder: IFyersBracketSellOrder = {
   productType: 'BO',
   side: -1,
   symbol: 'NSE:CANBK-EQ',
-  qty: 1,
+  qty: '',
   disclosedQty: 0,
   type: 4,
   limitPrice: 0,
@@ -18,7 +18,7 @@ export const initialBoSellOrder: IFyersBracketSellOrder = {
   offlineOrder: false,
 };
 
-export function getFyersBOSellOrderParams(
+export function getFyersBOSellParams(
   high: number,
   low: number,
   variationLimit: number

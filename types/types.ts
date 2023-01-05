@@ -1,5 +1,3 @@
-export type ButtonVariantTypes = 'contained' | 'outlined' | 'text' | undefined;
-
 export interface IHistoryParams {
   rangeFrom: string;
   rangeTo: string;
@@ -32,7 +30,7 @@ export interface IFyersBracketSellOrder {
   productType: string;
   side: number;
   symbol: string;
-  qty: number;
+  qty: string;
   disclosedQty: number;
   type: number;
   limitPrice: number;
@@ -54,4 +52,9 @@ export interface IOrderParameters {
   riskPerTrade: number;
   riskToRewardRatio: number;
   riskyCandleSize: number;
+}
+
+export interface INSESymbol {
+  name: string;
+  symbol: string;
 }
