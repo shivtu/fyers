@@ -21,4 +21,9 @@ export const stocks: IStock[] | null = [
     symbol: 'NSE:ACC-EQ',
     segment: 'cash',
   },
+  {
+    name: 'Silver Mic Feb Future 23',
+    symbol: 'MCX:SILVERMIC23FEBFUT',
+    segment: 'commodities',
+  },
 ];

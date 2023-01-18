@@ -24,12 +24,12 @@ const FyersBracketOrderSell = () => {
     high: 0,
     low: 0,
   });
-  const [FnOQty, setFnOQty] = useState(1);
+  const [FnOQty, setFnOQty] = useState('1');
   const [riskPerTrade, setRiskPerTrade] = useState<number>(100);
   const [variationLimit, setVariationLimit] = useState<number>(0.1);
   const [candleSize, setCandleSize] = useState(1.5);
   const [openTrades, setOpenTrades] = useState<Array<any>>([]);
-  const [fyersBOParams, setBOParams] = useState<IFyersBracketOrderParams>({
+  const [fyersBOParams, setFyersBOParams] = useState<IFyersBracketOrderParams>({
     limitPrice: 0,
     stopLoss: 0,
     stopPrice: 0,
@@ -51,7 +51,7 @@ const FyersBracketOrderSell = () => {
       variationLimit
     );
 
-    setBOParams(fyersBoSellParams);
+    setFyersBOParams(fyersBoSellParams);
 
     const bracketSellOrderParams = {
       noConfirm: true,
@@ -59,7 +59,8 @@ const FyersBracketOrderSell = () => {
       /** -1 for sell side and 1 for buy side */
       side: -1,
       symbol: symbol?.symbol || '',
-      qty: sellQty(),
+      /**if trade is in FnO set custom qty */
+      qty: symbol?.segment === 'commodities' ? FnOQty : sellQty(),
       disclosedQty: 0,
       type: 4,
       /** limitPrice is the entry price */
@@ -76,15 +77,15 @@ const FyersBracketOrderSell = () => {
       offlineOrder: false,
     };
 
-    try {
-      const result = await fyersBracketSellOrder(bracketSellOrderParams);
-      if (result.data.id) {
-        setOpenTrades([...openTrades, result.data.id]);
-      }
-      if (result.data.s === 'error') console.log('error aa gaya!');
-    } catch (error: any) {
-      alert(error.message || 'Could not place order');
-    }
+    // try {
+    //   const result = await fyersBracketSellOrder(bracketSellOrderParams);
+    //   if (result.data.id) {
+    //     setOpenTrades([...openTrades, result.data.id]);
+    //   }
+    //   if (result.data.s === 'error') console.log('error aa gaya!');
+    // } catch (error: any) {
+    //   alert(error.message || 'Could not place order');
+    // }
   };
 
   const sellQty = () => {
@@ -102,8 +103,8 @@ const FyersBracketOrderSell = () => {
   return (
     <Stack spacing={2}>
       <Alert severity='error' icon={<TrendingDown />}>
-        <AlertTitle>Fyers Sell Order</AlertTitle>
-        <strong>Bracket Order - Sell</strong>
+        <AlertTitle>Fyers Bracket Sell Order</AlertTitle>
+        <mark>Bracket Order</mark>
       </Alert>
       <Grid
         container
@@ -112,37 +113,11 @@ const FyersBracketOrderSell = () => {
         alignItems='center'
       >
         <TextField
-          label='Risk to reward ratio'
-          id='rsik-to-reward-ratio'
-          sx={{ m: 1, width: '15ch' }}
-          type='number'
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position='start'>1 : </InputAdornment>
-            ),
-          }}
-          size='small'
-          variant='outlined'
-        />
-        <TextField
           size='small'
           label='Avoid trade if candle greater than'
-          placeholder='Defaults to 1.5'
+          placeholder={`Defaults to ${candleSize}`}
           type='number'
           onChange={(e) => setCandleSize(Number(e.target.value))}
-        />
-        <VerticalDivider margin='8px' />
-        <TextField
-          size='small'
-          label='Risk per trade'
-          type='number'
-          onChange={(e) => setRiskPerTrade(Number(e.currentTarget.value))}
-        />
-
-        <FormControlLabel
-          style={{ margin: '8px' }}
-          control={<Checkbox defaultChecked />}
-          label='Set for all trades'
         />
       </Grid>
       <Grid
@@ -152,14 +127,6 @@ const FyersBracketOrderSell = () => {
         alignItems='center'
       >
         <Stack spacing={2}>
-          {/* <TextField
-            size='small'
-            label='Quantity'
-            type='number'
-            value={sellQty()}
-            disabled
-            helperText='Calculated on risk per trade'
-          /> */}
           <Autocomplete
             size='small'
             options={stocks || []}
@@ -171,6 +138,15 @@ const FyersBracketOrderSell = () => {
               setSymbol(newValue);
             }}
           />
+          {Boolean(symbol?.segment === 'commodities') && (
+            <TextField
+              size='small'
+              label='Quantity'
+              type='number'
+              helperText='custom qty for FnO'
+              onChange={(e) => setFnOQty(Number(e.target.value).toFixed())}
+            />
+          )}
           <TextField
             size='small'
             label='Variation limit'

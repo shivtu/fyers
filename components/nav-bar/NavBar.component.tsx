@@ -24,6 +24,8 @@ import Stack from '@mui/material/Stack/Stack';
 import Switch from '@mui/material/Switch/Switch';
 import { useRouter } from 'next/router';
 import { ROUTES } from '../../utils/constants';
+import SettingsIcon from '@mui/icons-material/Settings';
+import IconButton from '@mui/material/IconButton/IconButton';
 
 const drawerWidth = 240;
 
@@ -46,8 +48,7 @@ export default function NavBar({ children }: { children: React.ReactNode }) {
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
       <AppBar
-        color='transparent'
-        position='fixed'
+        color='default'
         sx={{
           width: `calc(100% - ${drawerWidth}px)`,
           mr: `${drawerAnchorLeft ? drawerWidth : 0}px`,
@@ -59,40 +60,52 @@ export default function NavBar({ children }: { children: React.ReactNode }) {
               Fyers Trading API
             </Typography>
 
-            <TextField
-              label='Risk to reward ratio'
-              id='rsik-to-reward-ratio'
-              sx={{ m: 1, width: '15ch' }}
-              type='number'
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position='start'>1 : </InputAdornment>
-                ),
-              }}
-              size='small'
-              variant='outlined'
-            />
-            <TextField
-              sx={{ m: 1, width: '15ch' }}
-              size='small'
-              variant='outlined'
-              label='Risk per trade'
-              type='number'
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position='start'>
-                    <CurrencyRupeeIcon />{' '}
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <Button
-              sx={{ m: 1, width: '24ch' }}
-              size='small'
-              variant='outlined'
+            <Stack direction='row'>
+              <TextField
+                label='Risk to reward ratio'
+                id='rsik-to-reward-ratio'
+                sx={{ m: 1, width: '15ch' }}
+                type='number'
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position='start'>1 : </InputAdornment>
+                  ),
+                }}
+                size='small'
+                variant='outlined'
+              />
+              <TextField
+                sx={{ m: 1, width: '15ch' }}
+                size='small'
+                variant='outlined'
+                label='Risk per trade'
+                type='number'
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position='start'>
+                      <CurrencyRupeeIcon />{' '}
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <Button
+                sx={{ m: 1, width: '24ch' }}
+                size='small'
+                variant='outlined'
+              >
+                Set for all trades
+              </Button>
+            </Stack>
+            <IconButton
+              color='primary'
+              aria-label='trade preferences'
+              component='label'
             >
-              Set for all trades
-            </Button>
+              <Typography variant='subtitle1'>
+                Pre define trade settings
+              </Typography>
+              <SettingsIcon />
+            </IconButton>
           </Toolbar>
         )}
       </AppBar>
@@ -115,6 +128,7 @@ export default function NavBar({ children }: { children: React.ReactNode }) {
               width: drawerWidth,
               boxSizing: 'border-box',
             },
+            backgroundColor: '#f5f5f5',
           }}
           variant='permanent'
           anchor={drawerAnchorLeft ? 'right' : 'left'}
