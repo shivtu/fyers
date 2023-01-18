@@ -1,7 +1,9 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from 'next';
+//@ts-ignore
 import fyers from 'fyers-api-v2';
 import fs from 'fs';
+import { APP_ID, CLIENT_SECRET } from '../../../../utils/constants';
 
 type Data = {
   token: string;
@@ -11,19 +13,18 @@ export default function handler(
   req: NextApiRequest,
   res: NextApiResponse<Data>
 ) {
-  fyers.setAppId('9DQFIB120O-100');
+  fyers.setAppId(APP_ID);
 
   /**Extract auth code from the redirected url */
   const authCode: string = `${req.url?.slice(40).split('&')[0]}`;
-
-  console.log('authcode', authCode);
 
   if (authCode) {
     /**GET ACCESS TOKEN */
     fyers
       .generate_access_token({
         auth_code: authCode,
-        secret_key: 'EVFCE6GK9B',
+        client_id: APP_ID,
+        secret_key: CLIENT_SECRET,
       })
       .then(
         (response: {
@@ -33,6 +34,7 @@ export default function handler(
           access_token: string;
           refresh_token: string;
         }) => {
+          console.log('response>>>', response);
           fs.writeFile(
             'db/db.json',
             JSON.stringify({ accessToken: response.access_token }),

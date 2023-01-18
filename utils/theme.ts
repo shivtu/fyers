@@ -16,7 +16,7 @@ interface Theme {
   warn: color;
 }
 
-export const getTheme = (type: ThemeType): color => {
+export const setTheme = (type: ThemeType): color => {
   const theme: Theme = {
     buy: 'success',
     sell: 'error',

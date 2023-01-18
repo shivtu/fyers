@@ -5,25 +5,26 @@ import TextField from '@mui/material/TextField/TextField';
 import { useState } from 'react';
 import { getFyersBOSellParams } from '../../../../utils/orders.helper';
 import { fyersBracketSellOrder } from '../../../../services/http.services';
-import { IFyersBracketOrderParams, INSESymbol } from '../../../../types/types';
+import { IFyersBracketOrderParams, IStock } from '../../../../types/types';
 import { getRoundNumber } from '../../../../utils/utils';
 import Typography from '@mui/material/Typography/Typography';
 import VerticalDivider from '../../../../components/dividers/VerticalDivider';
 import FormControlLabel from '@mui/material/FormControlLabel/FormControlLabel';
 import Checkbox from '@mui/material/Checkbox/Checkbox';
 import InputAdornment from '@mui/material/InputAdornment/InputAdornment';
-import { getTheme } from '../../../../utils/theme';
+import { setTheme } from '../../../../utils/theme';
 import { Alert, AlertTitle } from '@mui/material';
 import TrendingDown from '@mui/icons-material/TrendingDown';
-import { Autocomplete } from '@mui/lab';
-import { NSESymbols } from '../../../../utils/NSESymbols';
+import Autocomplete from '@mui/material/Autocomplete/Autocomplete';
+import { stocks } from '../../../../utils/stocks';
 
 const FyersBracketOrderSell = () => {
-  const [symbol, setSymbol] = useState<INSESymbol>();
+  const [symbol, setSymbol] = useState<IStock>();
   const [tradingCandle, setTradingCandle] = useState({
     high: 0,
     low: 0,
   });
+  const [FnOQty, setFnOQty] = useState(1);
   const [riskPerTrade, setRiskPerTrade] = useState<number>(100);
   const [variationLimit, setVariationLimit] = useState<number>(0.1);
   const [candleSize, setCandleSize] = useState(1.5);
@@ -37,8 +38,12 @@ const FyersBracketOrderSell = () => {
 
   const handleBracketSellOrder = async () => {
     if (tradingCandle.high - tradingCandle.low > candleSize) {
-      alert('High risk');
-      return;
+      const continueIfHighRisk = confirm(
+        'High risk, do you want to continue ?'
+      );
+      if (!continueIfHighRisk) {
+        return;
+      }
     }
     const fyersBoSellParams = getFyersBOSellParams(
       tradingCandle.high,
@@ -157,7 +162,7 @@ const FyersBracketOrderSell = () => {
           /> */}
           <Autocomplete
             size='small'
-            options={NSESymbols || []}
+            options={stocks || []}
             renderInput={(params) => (
               <TextField {...params} label='NSE Symbols' />
             )}
@@ -195,7 +200,7 @@ const FyersBracketOrderSell = () => {
             }
           />
           <Button
-            color={getTheme('sell')}
+            color={setTheme('sell')}
             size='small'
             onClick={handleBracketSellOrder}
             variant='contained'

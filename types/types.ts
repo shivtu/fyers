@@ -54,7 +54,10 @@ export interface IOrderParameters {
   riskyCandleSize: number;
 }
 
-export interface INSESymbol {
+export type StockSegmentTypes = 'cash' | 'FnO' | 'commodities';
+
+export interface IStock {
   name: string;
   symbol: string;
+  segment: StockSegmentTypes;
 }

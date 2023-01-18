@@ -2,6 +2,7 @@
 import fyers from 'fyers-api-v2';
 import { NextApiRequest, NextApiResponse } from 'next/types';
 import { IHistoryParams } from '../../../../types/types';
+import { APP_ID } from '../../../../utils/constants';
 import { getAccessToken } from '../../services';
 
 export async function getHistory(
@@ -9,7 +10,7 @@ export async function getHistory(
   res: NextApiResponse<any>
 ) {
   const accessToken = getAccessToken();
-  fyers.setAppId('9DQFIB120O-100');
+  fyers.setAppId(APP_ID);
   fyers.setAccessToken(accessToken);
   const history = new fyers.history();
   const historyParams: IHistoryParams = { ...req.body };

@@ -23,6 +23,7 @@ import InputAdornment from '@mui/material/InputAdornment/InputAdornment';
 import Stack from '@mui/material/Stack/Stack';
 import Switch from '@mui/material/Switch/Switch';
 import { useRouter } from 'next/router';
+import { ROUTES } from '../../utils/constants';
 
 const drawerWidth = 240;
 
@@ -31,6 +32,11 @@ export default function NavBar({ children }: { children: React.ReactNode }) {
   const [open, setOpen] = React.useState(true);
   const [drawerAnchorLeft, setdrawerAnchorLeft] =
     React.useState<boolean>(false);
+
+  // Do not render AppBar and Drawer menu if auth page
+  const renderAppBarAndDrawer = () => router.pathname !== ROUTES.AUTH;
+
+  const BO_ROUTE = `${ROUTES.ORDERS}${ROUTES.BO}`;
 
   const handleClick = () => {
     setOpen(!open);
@@ -47,11 +53,12 @@ export default function NavBar({ children }: { children: React.ReactNode }) {
           mr: `${drawerAnchorLeft ? drawerWidth : 0}px`,
         }}
       >
-        <Toolbar style={{ justifyContent: 'space-around' }}>
-          <Typography variant='h6' noWrap component='div'>
-            Fyers Trading API
-          </Typography>
-          <div>
+        {renderAppBarAndDrawer() && (
+          <Toolbar style={{ justifyContent: 'space-around' }}>
+            <Typography variant='h6' noWrap component='div'>
+              Fyers Trading API
+            </Typography>
+
             <TextField
               label='Risk to reward ratio'
               id='rsik-to-reward-ratio'
@@ -86,8 +93,8 @@ export default function NavBar({ children }: { children: React.ReactNode }) {
             >
               Set for all trades
             </Button>
-          </div>
-        </Toolbar>
+          </Toolbar>
+        )}
       </AppBar>
       {drawerAnchorLeft && (
         <Box
@@ -99,60 +106,62 @@ export default function NavBar({ children }: { children: React.ReactNode }) {
         </Box>
       )}
 
-      <Drawer
-        sx={{
-          width: drawerWidth,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
+      {renderAppBarAndDrawer() && (
+        <Drawer
+          sx={{
             width: drawerWidth,
-            boxSizing: 'border-box',
-          },
-        }}
-        variant='permanent'
-        anchor={drawerAnchorLeft ? 'right' : 'left'}
-      >
-        <Stack direction='row' spacing={1} alignItems='center'>
-          <Typography>Move menu right</Typography>
-          <Switch onChange={() => setdrawerAnchorLeft(!drawerAnchorLeft)} />
-        </Stack>
-        <Toolbar />
-
-        <List
-          sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
-          component='nav'
-          subheader={<ListSubheader component='div'>Orders</ListSubheader>}
+            flexShrink: 0,
+            '& .MuiDrawer-paper': {
+              width: drawerWidth,
+              boxSizing: 'border-box',
+            },
+          }}
+          variant='permanent'
+          anchor={drawerAnchorLeft ? 'right' : 'left'}
         >
-          <ListItemButton onClick={handleClick}>
-            <ListItemText primary='Bracket orders' />
-            {open ? <ExpandLess /> : <ExpandMore />}
-          </ListItemButton>
-          <Collapse in={open} timeout='auto' unmountOnExit>
-            <List component='div' disablePadding>
-              <ListItem>
-                <Button
-                  size='small'
-                  variant='contained'
-                  color='success'
-                  startIcon={<TrendingUpIcon />}
-                  onClick={() => router.push('/orders/bo/buy')}
-                >
-                  Buy
-                </Button>
-                <VerticalDivider margin='4px' />
-                <Button
-                  size='small'
-                  variant='contained'
-                  color='error'
-                  endIcon={<TrendingDownIcon />}
-                  onClick={() => router.push('/orders/bo/sell')}
-                >
-                  Sell
-                </Button>
-              </ListItem>
-            </List>
-          </Collapse>
-        </List>
-      </Drawer>
+          <Stack direction='row' spacing={1} alignItems='center'>
+            <Typography>Move menu right</Typography>
+            <Switch onChange={() => setdrawerAnchorLeft(!drawerAnchorLeft)} />
+          </Stack>
+          <Toolbar />
+
+          <List
+            sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper' }}
+            component='nav'
+            subheader={<ListSubheader component='div'>Orders</ListSubheader>}
+          >
+            <ListItemButton onClick={handleClick}>
+              <ListItemText primary='Bracket orders' />
+              {open ? <ExpandLess /> : <ExpandMore />}
+            </ListItemButton>
+            <Collapse in={open} timeout='auto' unmountOnExit>
+              <List component='div' disablePadding>
+                <ListItem>
+                  <Button
+                    size='small'
+                    variant='contained'
+                    color='success'
+                    startIcon={<TrendingUpIcon />}
+                    onClick={() => router.push(`${BO_ROUTE}${ROUTES.BUY}`)}
+                  >
+                    Buy
+                  </Button>
+                  <VerticalDivider margin='4px' />
+                  <Button
+                    size='small'
+                    variant='contained'
+                    color='error'
+                    endIcon={<TrendingDownIcon />}
+                    onClick={() => router.push(`${BO_ROUTE}${ROUTES.SELL}`)}
+                  >
+                    Sell
+                  </Button>
+                </ListItem>
+              </List>
+            </Collapse>
+          </List>
+        </Drawer>
+      )}
 
       {!drawerAnchorLeft && (
         <Box
