@@ -26,11 +26,22 @@ import { useRouter } from 'next/router';
 import { ROUTES } from '../../utils/constants';
 import SettingsIcon from '@mui/icons-material/Settings';
 import IconButton from '@mui/material/IconButton/IconButton';
+import { useAppDispatch, useAppSelector } from '../../redux/reduxHooks';
+import {
+  selectRiskPerTrade,
+  selectRiskRewardRatio,
+  setRiskPerTrade,
+  setRiskToRewardRatio,
+} from '../../redux/slices/risk-reward-settings/riskRewardSettingSlice';
 
 const drawerWidth = 240;
 
 export default function NavBar({ children }: { children: React.ReactNode }) {
+  const state = useAppSelector((state) => state);
+  const riskPerTrade = selectRiskPerTrade(state);
+  const riskToRewardRatio = selectRiskRewardRatio(state);
   const router = useRouter();
+  const dispatch = useAppDispatch();
   const [open, setOpen] = React.useState(true);
   const [drawerAnchorLeft, setdrawerAnchorLeft] =
     React.useState<boolean>(false);
@@ -66,6 +77,10 @@ export default function NavBar({ children }: { children: React.ReactNode }) {
                 id='rsik-to-reward-ratio'
                 sx={{ m: 1, width: '15ch' }}
                 type='number'
+                value={riskToRewardRatio}
+                onChange={(e) =>
+                  dispatch(setRiskToRewardRatio(Number(e.target.value)))
+                }
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>1 : </InputAdornment>
@@ -80,10 +95,14 @@ export default function NavBar({ children }: { children: React.ReactNode }) {
                 variant='outlined'
                 label='Risk per trade'
                 type='number'
+                value={riskPerTrade}
+                onChange={(e) =>
+                  dispatch(setRiskPerTrade(Number(e.target.value)))
+                }
                 InputProps={{
                   startAdornment: (
                     <InputAdornment position='start'>
-                      <CurrencyRupeeIcon />{' '}
+                      <CurrencyRupeeIcon />
                     </InputAdornment>
                   ),
                 }}

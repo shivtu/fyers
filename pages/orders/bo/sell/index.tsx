@@ -3,37 +3,45 @@ import Grid from '@mui/material/Grid/Grid';
 import Stack from '@mui/material/Stack/Stack';
 import TextField from '@mui/material/TextField/TextField';
 import { useState } from 'react';
-import { getFyersBOSellParams } from '../../../../utils/orders.helper';
-import { fyersBracketSellOrder } from '../../../../services/http.services';
-import { IFyersBracketOrderParams, IStock } from '../../../../types/types';
+import {
+  getFyersBOSellParams,
+  isStockSegmentFnO,
+} from '../../../../utils/orders.helper';
+import { fyersBracketOrder } from '../../../../services/http.services';
+import {
+  IFyersBracketOrder,
+  IFyersBracketOrderParams,
+} from '../../../../types/types';
 import { getRoundNumber } from '../../../../utils/utils';
 import Typography from '@mui/material/Typography/Typography';
 import VerticalDivider from '../../../../components/dividers/VerticalDivider';
-import FormControlLabel from '@mui/material/FormControlLabel/FormControlLabel';
-import Checkbox from '@mui/material/Checkbox/Checkbox';
-import InputAdornment from '@mui/material/InputAdornment/InputAdornment';
 import { setTheme } from '../../../../utils/theme';
 import { Alert, AlertTitle } from '@mui/material';
 import TrendingDown from '@mui/icons-material/TrendingDown';
-import Autocomplete from '@mui/material/Autocomplete/Autocomplete';
-import { stocks } from '../../../../utils/stocks';
+import { useAppSelector } from '../../../../redux/reduxHooks';
+import { selectRiskPerTrade } from '../../../../redux/slices/risk-reward-settings/riskRewardSettingSlice';
+import StockList from '../../../../components/stock-list/StockList';
+import { selectStock } from '../../../../redux/slices/selected-stock/selectedStockSlice';
 
 const FyersBracketOrderSell = () => {
-  const [symbol, setSymbol] = useState<IStock>();
+  const state = useAppSelector((state) => state);
+  const riskPerTrade = selectRiskPerTrade(state);
+  const selectedStock = selectStock(state);
   const [tradingCandle, setTradingCandle] = useState({
     high: 0,
     low: 0,
   });
   const [FnOQty, setFnOQty] = useState('1');
-  const [riskPerTrade, setRiskPerTrade] = useState<number>(100);
-  const [variationLimit, setVariationLimit] = useState<number>(0.1);
-  const [candleSize, setCandleSize] = useState(1.5);
+  const [variationLimit, setVariationLimit] = useState<number>(1);
+  const [candleSize, setCandleSize] = useState(100);
   const [openTrades, setOpenTrades] = useState<Array<any>>([]);
   const [fyersBOParams, setFyersBOParams] = useState<IFyersBracketOrderParams>({
     limitPrice: 0,
     stopLoss: 0,
     stopPrice: 0,
     takeProfit: 0,
+    absoluteStopLossPrice: 0,
+    absoluteTargetPrice: 0,
   });
 
   const handleBracketSellOrder = async () => {
@@ -48,19 +56,20 @@ const FyersBracketOrderSell = () => {
     const fyersBoSellParams = getFyersBOSellParams(
       tradingCandle.high,
       tradingCandle.low,
-      variationLimit
+      variationLimit,
+      riskPerTrade
     );
 
     setFyersBOParams(fyersBoSellParams);
 
-    const bracketSellOrderParams = {
+    const bracketSellOrderParams: IFyersBracketOrder = {
       noConfirm: true,
       productType: 'BO',
       /** -1 for sell side and 1 for buy side */
       side: -1,
-      symbol: symbol?.symbol || '',
+      symbol: selectedStock.symbol,
       /**if trade is in FnO set custom qty */
-      qty: symbol?.segment === 'commodities' ? FnOQty : sellQty(),
+      qty: isStockSegmentFnO(selectedStock) ? FnOQty : sellQty(),
       disclosedQty: 0,
       type: 4,
       /** limitPrice is the entry price */
@@ -77,15 +86,15 @@ const FyersBracketOrderSell = () => {
       offlineOrder: false,
     };
 
-    // try {
-    //   const result = await fyersBracketSellOrder(bracketSellOrderParams);
-    //   if (result.data.id) {
-    //     setOpenTrades([...openTrades, result.data.id]);
-    //   }
-    //   if (result.data.s === 'error') console.log('error aa gaya!');
-    // } catch (error: any) {
-    //   alert(error.message || 'Could not place order');
-    // }
+    try {
+      const result = await fyersBracketOrder(bracketSellOrderParams);
+      if (result.data.id) {
+        setOpenTrades([...openTrades, result.data.id]);
+      }
+      if (result.data.s === 'error') console.error(result.data);
+    } catch (error: any) {
+      alert(error.message || 'Could not place order');
+    }
   };
 
   const sellQty = () => {
@@ -103,8 +112,9 @@ const FyersBracketOrderSell = () => {
   return (
     <Stack spacing={2}>
       <Alert severity='error' icon={<TrendingDown />}>
-        <AlertTitle>Fyers Bracket Sell Order</AlertTitle>
-        <mark>Bracket Order</mark>
+        <AlertTitle>
+          Fyers <mark>Bracket Order</mark> - Sell
+        </AlertTitle>
       </Alert>
       <Grid
         container
@@ -127,18 +137,8 @@ const FyersBracketOrderSell = () => {
         alignItems='center'
       >
         <Stack spacing={2}>
-          <Autocomplete
-            size='small'
-            options={stocks || []}
-            renderInput={(params) => (
-              <TextField {...params} label='NSE Symbols' />
-            )}
-            getOptionLabel={(option) => option.name}
-            onChange={(event: any, newValue: any) => {
-              setSymbol(newValue);
-            }}
-          />
-          {Boolean(symbol?.segment === 'commodities') && (
+          <StockList />
+          {isStockSegmentFnO(selectedStock) && (
             <TextField
               size='small'
               label='Quantity'
@@ -181,10 +181,12 @@ const FyersBracketOrderSell = () => {
             onClick={handleBracketSellOrder}
             variant='contained'
             disabled={
-              !Boolean(tradingCandle.high && tradingCandle.low && symbol)
+              !Boolean(
+                tradingCandle.high && tradingCandle.low && selectedStock.name
+              )
             }
           >
-            {`short ${symbol?.name}`}
+            {`short ${selectedStock?.name}`}
           </Button>
         </Stack>
 
@@ -195,23 +197,19 @@ const FyersBracketOrderSell = () => {
             <Typography variant='subtitle1'>Orders Placed</Typography>
             <Typography>Entry : {fyersBOParams?.limitPrice}</Typography>
             <Typography>
-              SL :
-              {getRoundNumber(
-                fyersBOParams.limitPrice +
-                  fyersBOParams.stopLoss +
-                  variationLimit * 2
-              )}
+              SL :{getRoundNumber(fyersBOParams.absoluteStopLossPrice)}
             </Typography>
             <Typography>
               Cost to cost SL (including brokerage) :
               {getRoundNumber(getTrailingSL())}
             </Typography>
-            <Typography>Sell Quantity : {sellQty()}</Typography>
+            <Typography>
+              Sell Quantity :
+              {isStockSegmentFnO(selectedStock) ? FnOQty : sellQty()}
+            </Typography>
             <Typography>
               Target:
-              {getRoundNumber(
-                fyersBOParams.limitPrice - fyersBOParams.takeProfit
-              )}
+              {getRoundNumber(fyersBOParams.absoluteTargetPrice)}
             </Typography>
             <Button size='small' variant='contained'>
               Cancel trade
@@ -227,7 +225,7 @@ const FyersBracketOrderSell = () => {
         <VerticalDivider margin='8px' />
 
         <Stack spacing={2}>
-          <Typography>Modify current open trades</Typography>
+          <Typography>Modify executed trades</Typography>
 
           {openTrades.length ? (
             openTrades.map((ot) => (
@@ -235,7 +233,7 @@ const FyersBracketOrderSell = () => {
                 <span>
                   {`Fyers Order-ID: ${ot}`}
                   <Button variant='contained' size='small'>
-                    Canel order
+                    Modify order
                   </Button>
                   <Button variant='contained' size='small'>
                     Trail SL to break even

@@ -34,18 +34,18 @@ export default function handler(
           access_token: string;
           refresh_token: string;
         }) => {
-          console.log('response>>>', response);
+          // console.log('response>>>', response);
           fs.writeFile(
             'db/db.json',
             JSON.stringify({ accessToken: response.access_token }),
             function (err) {
-              if (err) console.log(err);
+              if (err) console.error(err);
             }
           );
           res.redirect(`/scanner/${response.access_token}`);
         }
       )
-      .catch((e: any) => console.log('access_token_err>>', e));
+      .catch((e: any) => console.error('access_token_err>>', e));
   } else {
     res.redirect('/errors');
   }

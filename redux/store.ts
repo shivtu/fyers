@@ -1,10 +1,16 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
 
 import counterReducer from './slices/counter/counterSlice';
+import riskRewardSettingReducer from './slices/risk-reward-settings/riskRewardSettingSlice';
+import selectedStockReducer from './slices/selected-stock/selectedStockSlice';
 
 export function makeStore() {
   return configureStore({
-    reducer: { counter: counterReducer },
+    reducer: {
+      counter: counterReducer,
+      riskRewardSetting: riskRewardSettingReducer,
+      selectedStock: selectedStockReducer,
+    },
   });
 }
 

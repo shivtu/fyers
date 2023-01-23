@@ -1,5 +1,51 @@
 export const getRoundNumber = (num: number) => Math.round(num * 100) / 100;
 
+export const csvToJSON = (csv: string) => {
+  const lines = csv.split('\n');
+
+  const result = [];
+
+  const headers = [
+    'Fytoken',
+    'Symbol Details',
+    'Exchange Instrument type',
+    'Minimum lot size',
+    'Tick size',
+    'ISIN',
+    'Trading Session',
+    'Last update date',
+    'Expiry date',
+    'Symbol ticker',
+    'Exchange',
+    'Segment',
+    'Scrip code',
+    'Underlying scrip code',
+    'Strike price',
+    'Option type',
+    'xx',
+    'REDUDANT',
+  ];
+
+  for (let i = 1; i < lines.length; i++) {
+    const obj: any = {};
+    const currentline = lines[i].split(',');
+
+    for (let j = 0; j < headers.length; j++) {
+      obj[headers[j]] = currentline[j];
+    }
+
+    result.push(obj);
+  }
+  return result; //JSON
+};
+
+export const removeDuplicatesFromJSONArray = (arr: any[]) =>
+  arr.filter(
+    (value, index, self) =>
+      index ===
+      self.findIndex((t) => t['Symbol Details'] === value['Symbol Details'])
+  );
+
 // From fyers-api-v2 lib
 export const sha256 = (s: string) => {
   var chrsz = 8;

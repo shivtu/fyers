@@ -1,3 +1,3 @@
 // import '@mui/material/styles';
 
-//declare module 'fyers-api-v2';
+declare module 'fyers-api-v2';

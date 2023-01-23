@@ -15,7 +15,7 @@ export default function Token() {
       } = await axios.get('http://localhost:3000/api/fyers/profile');
       setProfile(profile.data.data);
     } catch (error) {
-      console.log('profile error', error);
+      console.error('profile error', error);
     }
   };
 

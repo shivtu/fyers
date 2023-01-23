@@ -23,21 +23,34 @@ export interface IFyersBracketOrderParams {
   stopPrice: number;
   stopLoss: number;
   takeProfit: number;
+  absoluteTargetPrice: number;
+  absoluteStopLossPrice: number;
 }
 
-export interface IFyersBracketSellOrder {
+export interface IFyersBracketOrder {
   noConfirm: boolean;
-  productType: string;
-  side: number;
+  productType:
+    | 'CNC'
+    | 'INTRADAY'
+    | 'MARGIN'
+    | 'CO'
+    | 'BO' /**CNC => For equity only INTRADAY => Applicable for all segments. MARGIN => Applicable only for derivatives CO => Cover Order BO => Bracket Order */;
+  side: -1 | 1;
   symbol: string;
   qty: string;
   disclosedQty: number;
-  type: number;
+  type:
+    | 1
+    | 2
+    | 3
+    | 4 /**1 => Limit Order 2 => Market Order 3 => Stop Order (SL-M) 4 => Stoplimit Order (SL-L)*/;
   limitPrice: number;
   stopPrice: number;
   stopLoss: number;
   takeProfit: number;
-  validity: string;
+  validity:
+    | 'IOC'
+    | 'DAY' /**IOC => Immediate or Cancel DAY => Valid till the end of the day */;
   filledQty: number;
   offlineOrder: boolean;
 }
@@ -53,11 +66,18 @@ export interface IOrderParameters {
   riskToRewardRatio: number;
   riskyCandleSize: number;
 }
-
-export type StockSegmentTypes = 'cash' | 'FnO' | 'commodities';
+/**
+ 10	Capital Market 
+ 11	Equity Derivatives
+ 12	Currency Derivatives
+ 20	Commodity Derivatives
+ */
+export type StockSegmentTypes = '10' | '11' | '12' | '20';
 
 export interface IStock {
   name: string;
   symbol: string;
   segment: StockSegmentTypes;
 }
+
+export type OrderType = 'buy' | 'sell';

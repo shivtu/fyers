@@ -1,32 +1,52 @@
-import { IFyersBracketSellOrder } from '../types/types';
+import { IFyersBracketOrder, IStock } from '../types/types';
 import { getRoundNumber } from './utils';
 
-export const initialBoSellOrder: IFyersBracketSellOrder = {
-  noConfirm: true,
-  productType: 'BO',
-  side: -1,
-  symbol: 'NSE:CANBK-EQ',
-  qty: '',
-  disclosedQty: 0,
-  type: 4,
-  limitPrice: 0,
-  stopPrice: 0,
-  stopLoss: 1.0,
-  takeProfit: 1,
-  validity: 'DAY',
-  filledQty: 0,
-  offlineOrder: false,
-};
-
-export function getFyersBOSellParams(
+export const getFyersBOSellParams = (
   high: number,
   low: number,
-  variationLimit: number
-) {
+  variationLimit: number,
+  riskToRewardRatio: number
+) => {
   const stopPrice = getRoundNumber(low - variationLimit); // trigger price
-  const limitPrice = getRoundNumber(stopPrice - 0.05); // price to enter the trade
-  const stopLoss = getRoundNumber(high + variationLimit - low); // difference of entery price - (high + variation)
-  const takeProfit = getRoundNumber(high + variationLimit - limitPrice) * 2;
+  const limitPrice = getRoundNumber(stopPrice - variationLimit); // price to enter the trade
+  const absoluteStopLossPrice = high + variationLimit;
+  const stopLoss = getRoundNumber(absoluteStopLossPrice - low); // difference of entery price - (high + variation)
+  const takeProfit =
+    getRoundNumber(absoluteStopLossPrice - limitPrice) * riskToRewardRatio;
 
-  return { stopPrice, limitPrice, stopLoss, takeProfit };
-}
+  const absoluteTargetPrice = low - (high - low) * riskToRewardRatio;
+
+  return {
+    stopPrice,
+    limitPrice,
+    stopLoss,
+    takeProfit,
+    absoluteTargetPrice,
+    absoluteStopLossPrice,
+  };
+};
+
+export const getFyersBOBuyParams = (
+  high: number,
+  low: number,
+  variationLimit: number,
+  riskToRewardRatio: number
+) => {
+  const stopPrice = getRoundNumber(high + variationLimit); // trigger price
+  const limitPrice = getRoundNumber(stopPrice + variationLimit); // price to enter the buy trade
+  const absoluteStopLossPrice = low - variationLimit;
+  const stopLoss = getRoundNumber(limitPrice - absoluteStopLossPrice);
+  const absoluteTargetPrice = high + (high - low) * riskToRewardRatio;
+  const takeProfit = getRoundNumber(absoluteTargetPrice - limitPrice);
+  return {
+    stopPrice,
+    limitPrice,
+    stopLoss,
+    takeProfit,
+    absoluteTargetPrice,
+    absoluteStopLossPrice,
+  };
+};
+
+export const isStockSegmentFnO = (selectedStock: IStock) =>
+  selectedStock?.segment === '11' || selectedStock?.segment === '20';

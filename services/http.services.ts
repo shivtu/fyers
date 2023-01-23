@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { IFyersBracketSellOrder } from '../types/types';
+import { IFyersBracketOrder } from '../types/types';
 
 const urls = {
   baseUrl: 'http://localhost:3000/api/fyers',
-  boSell: 'orders/sell',
+  orders: 'orders',
 };
 
-export const fyersBracketSellOrder = async (
-  bracketSellOrderParams: IFyersBracketSellOrder
-) => await axios.post(`${urls.baseUrl}/${urls.boSell}`, bracketSellOrderParams);
+export const fyersBracketOrder = async (
+  bracketOrderParams: IFyersBracketOrder
+) => await axios.post(`${urls.baseUrl}/${urls.orders}`, bracketOrderParams);
